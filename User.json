@@ -1,5 +1,5 @@
 {
-    "showDialog": false,
+    "showDialog": "false",
     "Title": "Update Available⚡",
     "versionCode": "10",
     "versionName": "1.0",

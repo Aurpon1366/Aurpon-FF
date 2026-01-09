@@ -1,4 +1,7 @@
 {
-  "url": "https://google.com",
-  "message": "নতুন আপডেট এসেছে!"
+  "title": "নতুন আপডেট!",
+  "description": "আরও উন্নত ফিচারের জন্য অ্যাপটি আপডেট করুন।",
+  "update": {
+    "url": "https://your-link.com"
+  }
 }

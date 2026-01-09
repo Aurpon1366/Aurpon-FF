@@ -1,7 +1,7 @@
 {
-  "title": "নতুন আপডেট!",
-  "description": "আরও উন্নত ফিচারের জন্য অ্যাপটি আপডেট করুন।",
+  "title": "Update Available",
+  "description": "Please download the latest version.",
   "update": {
-    "url": "https://t.me/aurponff"
+    "url": "https://your-link-here.com"
   }
 }

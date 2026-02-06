@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;900&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Poppins', sans-serif; }
+        body { height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; background: transparent; overflow: hidden; }
+        
+        /* Premium Card RGB Border */
+        .card { width: 88%; max-width: 340px; padding: 2.5px; position: relative; background: #000; border-radius: 25px; display: none; overflow: hidden; z-index: 10; box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); }
+        .show-card { display: block !important; animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .card::before { content:''; position:absolute; width:150%; height:150%; background:conic-gradient(#00f2ff, #7d2ae8, #ff0055, #00f2ff); top:-25%; left:-25%; animation: rotateRGB 3s linear infinite; }
+        @keyframes rotateRGB { 100% { transform: rotate(360deg); } }
+        @keyframes zoomIn { from { transform: scale(0.5); opacity:0; } to { transform: scale(1); opacity:1; } }
+
+        .inner { position:relative; background:#0e0e0e; border-radius:23px; padding:20px; z-index:1; }
+        
+        /* Header Section */
+        .header { display:flex; align-items:center; justify-content: space-between; border-bottom:1px solid #222; padding-bottom:15px; margin-bottom: 15px; }
+        .header-left { display: flex; align-items: center; }
+        .logo { width:60px; height:60px; border-radius:15px; border:2px solid #00f2ff; margin-right:10px; object-fit: cover; }
+        .name-container { border: 1px solid rgba(0, 242, 255, 0.3); padding: 5px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.02); }
+        .app-name { font-size:15px; font-weight:900; text-transform: uppercase; background: linear-gradient(to right, #00f2ff, #fff, #00f2ff); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: shineText 3s linear infinite; }
+        @keyframes shineText { to { background-position: 200% center; } }
+        
+        .header-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+        .premium-badge { background: linear-gradient(45deg, #7d2ae8, #ff0055); color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 9px; font-weight: bold; text-transform: uppercase; animation: badgeFloat 2s infinite; box-shadow: 0 4px 10px rgba(255, 0, 85, 0.3); }
+        @keyframes badgeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .live-clock { color: #00f2ff; font-size: 10px; font-family: monospace; font-weight: bold; background: rgba(0, 242, 255, 0.1); padding: 2px 8px; border-radius: 5px; border-right: 2px solid #00f2ff; }
+
+        /* Social Icons Floating */
+        .social-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-bottom: 15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; }
+        .social-grid a { color:#fff; font-size:22px; text-align:center; display: inline-block; animation: iconWave 3s ease-in-out infinite; }
+        .social-grid a:nth-child(1) { animation-delay: 0.1s; }
+        .social-grid a:nth-child(2) { animation-delay: 0.3s; }
+        .social-grid a:nth-child(3) { animation-delay: 0.5s; }
+        .social-grid a:nth-child(4) { animation-delay: 0.7s; }
+        .social-grid a:nth-child(5) { animation-delay: 0.9s; }
+        @keyframes iconWave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        
+        /* Glow Button */
+        .btn-join { background: linear-gradient(45deg, #00f2ff, #0066ff); color:#fff; animation: pulseBtn 2s infinite; padding:12px; border-radius:12px; font-weight:bold; border:none; text-transform:uppercase; font-size:11px; width:100%; cursor:pointer; }
+        @keyframes pulseBtn { 0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.7); } 70% { box-shadow: 0 0 0 12px rgba(0, 242, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); } }
+        
+        /* Toast Notification */
+        #customToast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #00f2ff; color: #000; padding: 10px 20px; border-radius: 50px; font-size: 12px; font-weight: 900; display: none; z-index: 1000; border: 2px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+        /* Lock Countdown */
+        .countdown-box { margin-top: 15px; background: rgba(255, 0, 85, 0.1); border: 1px dashed #ff0055; padding: 10px; border-radius: 12px; text-align: center; }
+        .timer-txt { font-family: monospace; color: #ff0055; font-size: 22px; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+<audio id="btnMusic" src="Welcome.mp3" preload="auto"></audio>
+<div id="customToast"></div>
+
+<div class="card" id="mainCard">
+    <div class="inner">
+        <div class="header">
+            <div class="header-left">
+                <img id="lImg" src="" class="logo">
+                <div class="name-container">
+                    <div class="app-name" id="lName">ADMIN</div>
+                    <div style="font-size:8px; color:#00f2ff; font-weight: bold;">OFFICIAL SYSTEM</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="premium-badge"><i class="fas fa-crown"></i> <span id="lBadge">VIP</span></div>
+                <div id="clock" class="live-clock">00:00:00</div>
+            </div>
+        </div>
+
+        <div id="contentUI">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(0,242,255,0.2); border-radius: 12px; padding: 12px; margin-bottom: 12px; min-height: 80px;">
+                <p id="lMsg" style="font-size:12.5px; color:#ddd; line-height:1.6;"></p>
+            </div>
+            
+            <div id="normalSection">
+                <div class="social-grid">
+                    <a id="sYt"><i class="fab fa-youtube" style="color:#ff0000"></i></a>
+                    <a id="sFb"><i class="fab fa-facebook" style="color:#1877f2"></i></a>
+                    <a id="sIg"><i class="fab fa-instagram" style="color:#e4405f"></i></a>
+                    <a id="sTk"><i class="fab fa-tiktok"></i></a>
+                    <a id="sTg"><i class="fab fa-telegram" style="color:#229ed9"></i></a>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button id="dismissBtn" style="flex:1; padding:12px; border-radius:12px; background:#1a1a1a; color:#aaa; border:1px solid #333; font-weight:bold; font-size:11px; cursor:pointer;">DISMISS</button>
+                    <button id="lJoin" class="btn-join" style="flex:1;">JOIN NOW</button>
+                </div>
+            </div>
+            <div id="updateSection" style="display:none;">
+                <button id="upBtn" class="btn-join">DOWNLOAD UPDATE</button>
+            </div>
+        </div>
+
+        <div id="lockUI" style="display:none; text-align:center; padding:10px 0;">
+            <i class="fas fa-lock" style="font-size:40px; color:#ff0055; margin-bottom:10px; animation: badgeFloat 2s infinite;"></i>
+            <h2 style="color:#fff; font-size:16px;">Service Locked</h2>
+            <div class="countdown-box">
+                <p style="font-size: 9px; color: #ff0055; font-weight:bold;">REMAINING TIME</p>
+                <div id="timerDisplay" class="timer-txt">00:00:00</div>
+            </div>
+            <p id="lockMsg" style="color:#aaa; font-size:11px; margin-top:10px;"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    let appData = null; let oldMsg = "";
+    const music = document.getElementById('btnMusic');
+    const toastBox = document.getElementById('customToast');
+
+    function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB'); }
+    setInterval(updateClock, 1000); updateClock();
+
+    const firebaseConfig = { apiKey: "AIzaSyAIFSGyYx2D48kLZH92sfy_3HgLF5vMtpY", databaseURL: "https://devoloper-124bd-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+
+    function typeEffect(element, text) {
+        if (oldMsg === text) return; oldMsg = text;
+        element.innerHTML = "";
+        const textArray = Array.from(text); 
+        let i = 0;
+        function type() {
+            if (i < textArray.length) {
+                let char = textArray[i];
+                element.innerHTML += char === '\n' ? '<br>' : char;
+                i++; setTimeout(type, 35);
+            }
+        }
+        type();
+    }
+
+    function checkLogic() {
+        if(!appData) return;
+        const now = new Date();
+        const currentTime = now.getHours() * 100 + now.getMinutes();
+        const start = parseInt(appData.lock_start || "0000"), end = parseInt(appData.lock_end || "0000");
+
+        // --- All Admins Updates Fix ---
+        document.getElementById('lBadge').innerText = appData.badge_text || "VIP";
+        document.getElementById('lName').innerText = appData.app_name || "ADMIN";
+        document.getElementById('lJoin').innerText = appData.btn_text || "JOIN NOW"; // FIX: Join Button Text
+        document.getElementById('lImg').src = appData.logo_url;
+
+        let isLocked = (appData.lock_status === "ON") && (start < end ? (currentTime >= start && currentTime < end) : (currentTime >= start || currentTime < end));
+
+        if (isLocked) {
+            document.getElementById('contentUI').style.display = 'none';
+            document.getElementById('lockUI').style.display = 'block';
+            document.getElementById('lockMsg').innerText = appData.lock_msg;
+            let target = new Date(); target.setHours(Math.floor(end/100), end%100, 0);
+            if (target < now) target.setDate(target.getDate() + 1);
+            let diff = target - now;
+            let h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+            document.getElementById('timerDisplay').innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        } else {
+            document.getElementById('contentUI').style.display = 'block';
+            document.getElementById('lockUI').style.display = 'none';
+            let isUpdate = (appData.update_status === "ON") || (appData.schedule_status === "ON" && appData.schedule_date && now >= new Date(appData.schedule_date));
+            if (isUpdate) {
+                document.getElementById('normalSection').style.display = 'none';
+                document.getElementById('updateSection').style.display = 'block';
+                typeEffect(document.getElementById('lMsg'), appData.update_msg || "🚀 New Version is ready!");
+            } else {
+                document.getElementById('normalSection').style.display = 'block';
+                document.getElementById('updateSection').style.display = 'none';
+                typeEffect(document.getElementById('lMsg'), appData.message);
+            }
+        }
+    }
+
+    firebase.database().ref('apps/App Id').on('value', (s) => {
+        appData = s.val(); if(appData) { checkLogic(); document.getElementById('mainCard').classList.add('show-card'); }
+    });
+
+    setInterval(checkLogic, 1000);
+
+    // Toast Fix
+    document.getElementById('dismissBtn').onclick = () => {
+        music.play().catch(e=>{});
+        toastBox.innerText = appData.toast_msg || "Closing...";
+        toastBox.style.display = 'block';
+        setTimeout(() => { window.location.href = "close://dialog"; }, 1500);
+    };
+
+    document.getElementById('lJoin').onclick = () => window.location.assign(appData.btn_url);
+    document.getElementById('upBtn').onclick = () => window.location.assign(appData.update_url);
+    const social = { 'sYt': 'yt_link', 'sFb': 'fb_link', 'sIg': 'ig_link', 'sTk': 'tk_link', 'sTg': 'tg_link' };
+    Object.keys(social).forEach(id => {
+        document.getElementById(id).onclick = () => window.location.assign(appData[social[id]]);
+    });
+</script>
+</body>
+</html>
